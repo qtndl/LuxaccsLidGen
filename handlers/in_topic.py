@@ -69,6 +69,7 @@ async def handle_group_message(message: types.Message, bot: bot):
         )
 
     except Exception as e:
+        await message.answer('❌ Ошибка пересылки сообщения. Обратитесь к разработчику.')
         print(f"Ошибка пересылки сообщения пользователю: {e}")
 
 @router.message(F.chat.type == ChatType.PRIVATE)

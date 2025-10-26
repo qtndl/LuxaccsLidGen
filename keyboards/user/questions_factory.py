@@ -59,10 +59,10 @@ qstns_btns_info = {
 
 qstns_btns_info_en = {
     1 : [
-        (1, "Up to 100K RUB", 1),
-        (2, "100K–500K RUB", 1),
-        (3, "500K–1M RUB", 1),
-        (4, "Over 1M RUB", 1)
+        (1, "Up to $100K", 1),
+        (2, "$100K–$500K", 1),
+        (3, "$500K–$1M", 1),
+        (4, "Over $1M", 1)
     ],
     2 : [
         (1, "Nutra", 2),
