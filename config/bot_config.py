@@ -10,7 +10,16 @@ config = dotenv_values(os.path.join(os.path.dirname(__file__), '.env'))
 
 TOKEN = config['api_token']
 CHAT_ID = config['chat_id']
-WEBHOOK_URL = "https://xn--80ah0ay.xn------c4dkrytqbkkf4adrce4a.xn--p1ai/api/webhook"  # HTTPS! Путь должен совпадать с эндпоинтом ниже
+
+WEBHOOK_HOST = '109.69.19.111'
+WEBHOOK_PORT = 443  # 443, 80, 88 или 8443 (порт должен быть открыт!)
+WEBHOOK_LISTEN = '0.0.0.0'  # На некоторых серверах придется указывать такой же IP, что и выше
+
+WEBHOOK_SSL_CERT = './webhook_cert.pem'  # Путь к сертификату
+WEBHOOK_SSL_PRIV = './webhook_pkey.pem'  # Путь к приватному ключу
+
+WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/%s/" % (TOKEN)
 
 HOST = config['host']
 USER = config['user']
