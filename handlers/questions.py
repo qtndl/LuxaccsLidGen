@@ -6,6 +6,8 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from config.bot_config import bot, CHAT_ID
 from sqlalchemy import select, and_, func, or_, text
+from .google_sheets import add_record_to_sheet
+from datetime import datetime
 
 from database.database import AsyncSessionLocal
 from database.models import Users
@@ -112,6 +114,7 @@ async def other_questions_manual(callback: types.CallbackQuery, callback_data: Q
 @router.message(StateFilter(Questions.question_4))
 async def last_question(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    user_username = message.from_user.username
     user_name = message.text
     await state.update_data(**{str(4): user_name})
 
@@ -155,6 +158,25 @@ async def last_question(message: types.Message, state: FSMContext):
     )
 
     await message.answer(text=answer_text)
+
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%d.%m.%y %H:%M")
+    chat_id_for_link = str(CHAT_ID)[4:]
+    values_for_sheet = [
+        user_id,
+        f'@{user_username}',
+        formatted_time,
+        ' ',
+        message_text,
+        'Нет',
+        f'https://t.me/c/{chat_id_for_link}/{user_topic_id}'
+
+    ]
+    await add_record_to_sheet(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name='Общий',
+        values=values_for_sheet
+    )
 
 @router.message(StateFilter(Questions))
 async def other_questions_state_manual(message: types.Message, state: FSMContext):

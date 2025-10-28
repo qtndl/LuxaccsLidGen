@@ -7,6 +7,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.enums import ChatType
 from config.bot_config import bot, CHAT_ID
 from sqlalchemy import select, and_, func, or_, text
+from .google_sheets import find_and_update_by_column_name, add_record_to_sheet
+from datetime import datetime
 
 from database.database import AsyncSessionLocal
 from database.models import Users
@@ -29,6 +31,8 @@ async def mngr_button(callback: types.CallbackQuery):
         user = record.scalar_one_or_none()
         user_lang = user.user_lang
         user.manager_id = str(user_id)
+        client_username = user.telegram_username
+        client_topic_id = user.thread_id
         user.manager_username = user_username
         user.manager_full_name = user_fullname
         await session.commit()
@@ -41,6 +45,30 @@ async def mngr_button(callback: types.CallbackQuery):
     await bot.send_message(
         chat_id=client_id,
         text=text
+    )
+    
+    await find_and_update_by_column_name(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name='Общий',
+        search_column_name='tg_id',
+        search_value=f'{client_id}',
+        update_column_name='Ответственный менеджер',
+        new_value=f'@{user_username}'
+    )
+    current_time = datetime.now()
+    formatted_time = current_time.strftime("%d.%m.%y %H:%M")
+    chat_id_for_link = str(CHAT_ID)[4:]
+    values_for_sheet = [
+        client_id,
+        f'@{client_username}',
+        formatted_time,
+        'Нет',
+        f'https://t.me/c/{chat_id_for_link}/{client_topic_id}'
+    ]
+    await add_record_to_sheet(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name=f'{user_username}',
+        values=values_for_sheet
     )
 
 
@@ -58,6 +86,7 @@ async def handle_topic_closed(event: types.Message, bot: bot):
         user = record.scalar_one_or_none()
         user_lang = user.user_lang
         user_id = user.telegram_id
+        user_manager = user.manager_username
         user.thread_id = None
         await session.commit()
     if user_id:
@@ -66,6 +95,23 @@ async def handle_topic_closed(event: types.Message, bot: bot):
         else:
             text = '✅ The inquiry is closed.'
         await bot.send_message(chat_id=user_id, text=text)
+
+    await find_and_update_by_column_name(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name='Общий',
+        search_column_name='tg_id',
+        search_value=f'{user_id}',
+        update_column_name='Закрыт',
+        new_value=f'Да'
+    )
+    await find_and_update_by_column_name(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name=f'{user_manager}',
+        search_column_name='tg_id',
+        search_value=f'{user_id}',
+        update_column_name='Закрыт',
+        new_value=f'Да'
+    )
 
 @router.message(F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}))
 async def handle_group_message(message: types.Message, bot: bot):
