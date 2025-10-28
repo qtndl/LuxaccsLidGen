@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "luxaccslidgen",
+  "private_key_id": "dce6f019b1ad2faa69ebf38431a447b7f2ae6aec",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDYztHkBfSSKfeC\nTfdqK311W93rr8NxMKcH1cUwi3LlJ/lngwXWU3Y7tJLHO4TFJJMrv60k2o1C2shB\nTPwR/T7+P4EdeTg1Xmowct4mNAKhPU5dh0BC2JTWI6qo7OlXzJteSQOOCdceRkhF\nzOpx/4BBzYDNAoMbT37gu2XljJDY3c8qFTrxAcIxc953JiQsvWOmgOaGVJTFGo2B\nX1l1vmO0XFvSit2uoMXbz2ssVu+oKcT49qlvBsJHUnwLiGKynnGFvvKy5gWy0wVL\nchQMNafmt/YCAS1dfi2Mjc/1Vx0QZqH1oODO8chYzuNdUFHZPJvvQlhqYvKz6p4k\neFHo4BzNAgMBAAECggEAGQ82tWt2zForcJVAbrYeJy16Jh7HsVKVS9OKmkTT/+ax\n7iP3zcER3m7NtFeNzhefJyRdh+/2+e49zUZvsEicOljuvJBhTdHe5kCwqqvCTg6+\n+xKB+/f6pBG1TRctFWfh4XEBBy7d/XLUMbUwuAJ3OaPeKlQLAWIb4S/n5DNuHpK2\nP5Pdp0NgI34fsrQ+eUsPzdQTC/zCJIw+JU18ygl7XeOk6jTgrq1iwHKZ2W6lP/Km\ncS8nGylEs+Mex+l7pAOT3oAh6V0vZOdPKrNxoKnP4nybkaIzYXy3tJga/kKaV+ZZ\nC3bTEZX7ORDkhpgOlflSD8kfKjC1xiq2ukQYEa+wJQKBgQDxqHuQYPvDESjND33v\nc+i0ANxSATblPOalYw1iVitAaIjBIY9NroI78ierCq1/vNrYYbyDBaXOdpo9pSSe\nB0VZw4ojs+jWaj/fpm7iD73C2MApJMenweLPReIqxSh/azS3Eq38XGxRY0lQJdFM\nob0iKP3MEUEFirEQBMzmaAWPtwKBgQDlrMlx83LN22AmXSYNzivf+mfjS4BdIOk6\nsidP/MpHPe+x4UiEsa2L2D0dtbPkBSGgDL9T7GQISkD9tupJ+a2nHbC46TAOD0SS\nBqkV7rLiCWOSY9boEHfPG7kTcz7rJ6fU27iTzDZsexxq6o7l69VQkwccIxBr7oF5\nrZ3BWdyvmwKBgQCzLfqYfeCOrV10VmVJM8c6GF1EDJR4eqSFwqD85elh82Ba2xhX\nP+peqllRUDR+vzgBMs7E014ybOxGgvlYlwmL2hnGCTK+ML+1g8E5qvRH0dEBcLz9\nHRygFS/yCIfTmljW2WnZ8Wl7G0QTwkajLFWBS6WLNsvgYQqSVwzaVgyxlwKBgQDg\nl+nZ054FbiwE9/vZbi57dSwYGeHpr+BCtKo6ztGjfw6hHNNEZ1d1NDz3i5LhPJ9Y\nGn8Se0yKysnpEPDk7BKDJEaHXAjRBt8gCQFZ4DTvUw0avyUNg+UVE2AVhBIX9Ixr\nW32Qkhb6WB0+9CZO8iKEC3LdcfCCCxZzvXJR/CURVwKBgQCelgQcz79UuOsNXE0H\n9f/jFyweeaaj35cRhtxw/qAvulGuUXmmC840H51OnN887ou/9XDckFqRTQvSecEQ\n/++4wm6w3N+tQLCnFs6SXQmSLPsYCyk9hRO+brdtQJVp14akDcpGkMxMvbEcEHun\nEdMFzYCszh5CAcgtNqFOx+rQTA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "luxaccs-key-py@luxaccslidgen.iam.gserviceaccount.com",
+  "client_id": "110905453579585144806",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/luxaccs-key-py%40luxaccslidgen.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
