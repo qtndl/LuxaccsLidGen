@@ -118,6 +118,8 @@ async def handle_group_message(message: types.Message, bot: bot):
 
     if not message.message_thread_id or message.from_user.id == bot.id:
         return
+    if message.message_thread_id is None:
+        return
 
     try:
         async with AsyncSessionLocal() as session:
