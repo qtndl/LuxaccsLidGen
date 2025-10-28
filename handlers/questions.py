@@ -9,18 +9,17 @@ from sqlalchemy import select, and_, func, or_, text
 
 from database.database import AsyncSessionLocal
 from database.models import Users
-from keyboards.main_menu_builder import main_menu_builder
 from keyboards.user.questions_factory import QuestionsButtons, get_question_keyboard
 from handlers.new_topic import create_user_topic
 
 router = Router(name='questions_router')
 
 class Questions(StatesGroup):
+    question_1 = State()
+    question_4 = State()
     question_2 = State()
-    question_5 = State()
-    question_6 = State()
-    question_7 = State()
-    question_8 = State()
+    # question_7 = State()
+    # question_8 = State()
 
 @router.callback_query(F.data=='ru')
 async def ru_start_menu(callback: types.CallbackQuery, state: FSMContext):
@@ -46,7 +45,7 @@ async def ru_start_menu(callback: types.CallbackQuery, state: FSMContext):
             session.add(new_user)
             await session.commit()
         keyboard = await get_question_keyboard(1, 'ru')
-        sent_message = await callback.message.answer('1) Какой у вас ежемесячный спенд?', reply_markup=keyboard, parse_mode="HTML")
+        sent_message = await callback.message.answer('1) Ваши основные источники трафика?', reply_markup=keyboard, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
 
 @router.callback_query(F.data=='en')
@@ -73,7 +72,7 @@ async def en_start_menu(callback: types.CallbackQuery, state: FSMContext):
             session.add(new_user)
             await session.commit()
         keyboard = await get_question_keyboard(1, 'en')
-        sent_message = await callback.message.answer('1) What is your monthly spend??', reply_markup=keyboard, parse_mode="HTML")
+        sent_message = await callback.message.answer('1) Your main traffic sources?', reply_markup=keyboard, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
 
 @router.callback_query(QuestionsButtons.filter((F.button_text == 'Другое (нап.)') | (F.button_text == 'Несколько (нап.)') | (F.button_text == 'Other (specify)') | (F.button_text == 'Multiple (specify)')))
@@ -84,14 +83,14 @@ async def other_questions_manual(callback: types.CallbackQuery, callback_data: Q
         user_lang = user_data.scalar_one_or_none()
 
     question_id = callback_data.question_id
-    if question_id==2:
+    if question_id==1:
+        st=Questions.question_1
+    elif question_id==2:
         st=Questions.question_2
-    elif question_id==5:
-        st=Questions.question_5
-    elif question_id==6:
-        st=Questions.question_6
-    elif question_id==7:
-        st=Questions.question_7
+    # elif question_id==6:
+    #     st=Questions.question_6
+    # elif question_id==7:
+    #     st=Questions.question_7
     else:
         await callback.message.answer('Ошибка! Обратитесь к разработчику')
         return
@@ -110,12 +109,11 @@ async def other_questions_manual(callback: types.CallbackQuery, callback_data: Q
     await state.update_data(sent_message=sent_message.message_id)
     await state.set_state(st)
 
-@router.message(StateFilter(Questions.question_8))
+@router.message(StateFilter(Questions.question_4))
 async def last_question(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
-    user_username = message.from_user.username
     user_name = message.text
-    await state.update_data(**{str(8): user_name})
+    await state.update_data(**{str(4): user_name})
 
     data = await state.get_data()
     await bot.delete_message(user_id, data['sent_message'])
@@ -124,7 +122,6 @@ async def last_question(message: types.Message, state: FSMContext):
     except:
         user_ref = None
         pass
-    print(user_ref)
     async with AsyncSessionLocal() as first_session:
         user_data = await first_session.execute(select(Users).where(Users.telegram_id==int(user_id)))
         user = user_data.scalar_one_or_none()
@@ -143,19 +140,18 @@ async def last_question(message: types.Message, state: FSMContext):
         answer_text = ("✅ We have received your request and will respond as soon as possible right here in the chat. Thank you for contacting us!\n\n"
                        "We also have a referral program, which you can learn more about using the /ref command.")
         questions = questions_texts_en
-    for i in list(range(1, 9)):
+    for i in list(range(1, 5)):
         message_text += questions[i]+'\n'
         message_text += (data[str(i)])+'\n'
-    await create_user_topic(
-        bot=bot,
-        chat_id=CHAT_ID,
-        user_name=data['8'],
-        user_id=user_id,
-        user_tg_name=user_username,
-        user_lang=user_lang,
-        user_source=data['5'],
-        user_message=message_text,
-        topic_name=f'Лид | {user_username}'
+
+    async with AsyncSessionLocal() as session:
+        db_data = await session.execute(select(Users.thread_id).where(Users.telegram_id==int(user_id)))
+        user_topic_id = db_data.scalar_one_or_none()
+    await bot.send_message(
+            chat_id=CHAT_ID,
+            message_thread_id=user_topic_id,
+            text=f'Ответы на опрос:\n\n'
+                 f'{message_text}'
     )
 
     await message.answer(text=answer_text)
@@ -163,11 +159,22 @@ async def last_question(message: types.Message, state: FSMContext):
 @router.message(StateFilter(Questions))
 async def other_questions_state_manual(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
+    user_username = message.from_user.username
     async with AsyncSessionLocal() as session:
         user_data = await session.execute(select(Users.user_lang).where(Users.telegram_id==int(user_id)))
         user_lang = user_data.scalar_one_or_none()
     current_state = await state.get_state()
     question_id = int(current_state.split('_')[-1])
+
+    if question_id==1:
+        await create_user_topic(
+            bot=bot,
+            chat_id=CHAT_ID,
+            user_id=user_id,
+            user_tg_name=user_username,
+            user_lang=user_lang,
+            topic_name=f'Лид | {user_username}'
+        )
 
     data = await state.get_data()
     await bot.delete_message(user_id, data['sent_message'])
@@ -181,10 +188,10 @@ async def other_questions_state_manual(message: types.Message, state: FSMContext
     else:
         message_text = questions_texts_en[next_question_id]
 
-    if next_question_id==8:
+    if next_question_id==4:
         sent_message = await message.answer(message_text)
         await state.update_data(sent_message=sent_message.message_id)
-        await state.set_state(Questions.question_8)
+        await state.set_state(Questions.question_4)
         return
 
     keyboard = await get_question_keyboard(next_question_id, user_lang)
@@ -195,6 +202,7 @@ async def other_questions_state_manual(message: types.Message, state: FSMContext
 @router.callback_query(QuestionsButtons.filter())
 async def other_questions(callback: types.CallbackQuery, callback_data: QuestionsButtons, state: FSMContext):
     user_id = callback.from_user.id
+    user_username = callback.from_user.username
     async with AsyncSessionLocal() as session:
         user_data = await session.execute(select(Users.user_lang).where(Users.telegram_id==int(user_id)))
         user_lang = user_data.scalar_one_or_none()
@@ -203,16 +211,26 @@ async def other_questions(callback: types.CallbackQuery, callback_data: Question
     next_question_id = question_id+1
     user_answer = callback_data.button_text
 
+    if question_id==1:
+        await create_user_topic(
+            bot=bot,
+            chat_id=CHAT_ID,
+            user_id=user_id,
+            user_tg_name=user_username,
+            user_lang=user_lang,
+            topic_name=f'Лид | {user_username}'
+        )
+
     await state.update_data(**{str(question_id): user_answer})
     if user_lang == 'ru':
         message_text = questions_texts_ru[next_question_id]
     else:
         message_text = questions_texts_en[next_question_id]
 
-    if next_question_id==8:
+    if next_question_id==4:
         sent_message = await callback.message.answer(message_text)
         await state.update_data(sent_message=sent_message.message_id)
-        await state.set_state(Questions.question_8)
+        await state.set_state(Questions.question_4)
         await callback.answer()
         await callback.message.delete()
         return
@@ -227,23 +245,23 @@ async def other_questions(callback: types.CallbackQuery, callback_data: Question
 
 
 questions_texts_ru = {
-    1: '1) Какой у вас ежемесячный спенд?',
+    1: '1) Ваши основные источники трафика?',
     2: '2) Ваша основная вертикаль?',
-    3: '3) Работали ли с агентствами по предоставлению рекламных аккаунтов?',
-    4: '4) Как давно вы в арбитраже?',
-    5: '5) Какую рекламу льёте?',
-    6: '6) Ваши основные источники трафика?',
-    7: '7) На какие гео вы чаще всего льёте рекламу?',
-    8: '8) Как к вам обращаться?'
+    3: '3) Какой у вас ежемесячный спенд?',
+    4: '4) Как к вам обращаться?'
+    # 5: '5) Какую рекламу льёте?',
+    # 6: '6) Работали ли с агентствами по предоставлению рекламных аккаунтов?',
+    # 7: '7) На какие гео вы чаще всего льёте рекламу?',
+    # 8: '8) Как давно вы в арбитраже?'
 }
 
 questions_texts_en = {
-    1: '1) What is your monthly spend?',
+    1: '1) Your main traffic sources?',
     2: '2) What is your main vertical?',
-    3: '3) Have you worked with agencies providing advertising accounts?',
-    4: '4) How long have you been in affiliate marketing?',
-    5: '5) What kind of ads do you run??',
-    6: '6) Your main traffic sources?',
-    7: '7) Which GEOs do you target most often?',
-    8: '8) How should we call you?'
+    3: '3) What is your monthly spend?',
+    4: '4) How should we call you?'
+    # 5: '5) What kind of ads do you run??',
+    # 6: '6) Have you worked with agencies providing advertising accounts?',
+    # 7: '7) Which GEOs do you target most often?',
+    # 8: '8) How long have you been in affiliate marketing?'
 }

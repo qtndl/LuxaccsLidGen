@@ -11,10 +11,14 @@ class QuestionsButtons(CallbackData, prefix="q"):
 
 qstns_btns_info = {
     1 : [
-        (1, "до 100к", 1),
-        (2, "100-500к", 1),
-        (3, "500к-1кк", 1),
-        (4, "> 1кк", 1)
+        (1, "Facebook", 1),
+        (2, "Google", 1),
+        (3, "TikTok", 1),
+        (4, "Taboola/Outbrain", 1),
+        (5, "MGID", 1),
+        (6, "Mi Ads", 1),
+        (7, "Несколько (нап.)", 1),
+        (8, "Другое (нап.)", 1)
     ],
     2 : [
         (1, "Нутра", 2),
@@ -23,9 +27,10 @@ qstns_btns_info = {
         (4, "Другое (нап.)", 2)
     ],
     3 : [
-        (1, "Работаем", 3),
-        (2, "Работали", 3),
-        (3, "Не работали", 3)
+        (1, "до 100к", 3),
+        (2, "100-500к", 3),
+        (3, "500к-1кк", 3),
+        (4, "> 1кк", 3)
     ],
     4 : [
         (1, "Менее года", 4),
@@ -40,14 +45,9 @@ qstns_btns_info = {
         (4, "Другое (нап.)", 5)
     ],
     6 : [
-        (1, "Facebook", 6),
-        (2, "Google", 6),
-        (3, "TikTok", 6),
-        (4, "Taboola/Outbrain", 6),
-        (5, "MGID", 6),
-        (6, "Mi Ads", 6),
-        (7, "Несколько (нап.)", 6),
-        (8, "Другое (нап.)", 6)
+        (1, "Работаем", 6),
+        (2, "Работали", 6),
+        (3, "Не работали", 6)
     ],
     7 : [
         (1, "Тир 1", 7),
@@ -59,10 +59,14 @@ qstns_btns_info = {
 
 qstns_btns_info_en = {
     1 : [
-        (1, "Up to $100K", 1),
-        (2, "$100K–$500K", 1),
-        (3, "$500K–$1M", 1),
-        (4, "Over $1M", 1)
+        (1, "Facebook", 1),
+        (2, "Google", 1),
+        (3, "TikTok", 1),
+        (4, "Taboola/Outbrain", 1),
+        (5, "MGID", 1),
+        (6, "Mi Ads", 1),
+        (7, "Multiple (specify)", 1),
+        (8, "Other (specify)", 1)
     ],
     2 : [
         (1, "Nutra", 2),
@@ -71,9 +75,10 @@ qstns_btns_info_en = {
         (4, "Other (specify)", 2)
     ],
     3 : [
-        (1, "Yes, currently work", 3),
-        (2, "Yes, worked in a past", 3),
-        (3, "No, never worked with", 3)
+        (1, "Up to $100K", 3),
+        (2, "$100K–$500K", 3),
+        (3, "$500K–$1M", 3),
+        (4, "Over $1M", 3)
     ],
     4 : [
         (1, "< 1 year", 4),
@@ -88,14 +93,9 @@ qstns_btns_info_en = {
         (4, "Other (specify)", 5)
     ],
     6 : [
-        (1, "Facebook", 6),
-        (2, "Google", 6),
-        (3, "TikTok", 6),
-        (4, "Taboola/Outbrain", 6),
-        (5, "MGID", 6),
-        (6, "Mi Ads", 6),
-        (7, "Multiple (specify)", 6),
-        (8, "Other (specify)", 6)
+        (1, "Yes, currently work", 6),
+        (2, "Yes, worked in a past", 6),
+        (3, "No, never worked with", 6)
     ],
     7 : [
         (1, "Tier 1", 7),

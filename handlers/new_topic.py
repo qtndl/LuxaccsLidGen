@@ -11,12 +11,9 @@ from keyboards.user.new_user_topic import new_user_topic_keyboard
 async def create_user_topic(
     bot: Bot,
     chat_id,
-    user_name,
     user_id,
     user_tg_name,
     user_lang,
-    user_source,
-    user_message,
     topic_name):
 
     try:
@@ -36,12 +33,8 @@ async def create_user_topic(
             chat_id=chat_id,
             message_thread_id=topic.message_thread_id,
             text=f'Новый лид!\n\n'
-                 f'Имя: {user_name}\n'
                  f'Контакт: @{user_tg_name}\n'
-                 f'Источник: {user_source}\n'
-                 f'Язык: {user_lang}\n\n'
-                 f'Опрос:\n'
-                 f'{user_message}',
+                 f'Язык: {user_lang}\n\n',
             reply_markup=keyboard)
 
         return topic

@@ -16,7 +16,7 @@ from keyboards.user.new_user_topic import manager_took_usr_in_work_keyboard
 router = Router(name='in_topic_router')
 
 @router.callback_query(F.data.startswith('mngr_'))
-async def ignore_button(callback: types.CallbackQuery):
+async def mngr_button(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     user_username = callback.from_user.username
     user_fullname = callback.from_user.full_name
@@ -27,12 +27,21 @@ async def ignore_button(callback: types.CallbackQuery):
     async with AsyncSessionLocal() as session:
         record = await session.execute(select(Users).where(Users.telegram_id==int(client_id)))
         user = record.scalar_one_or_none()
+        user_lang = user.user_lang
         user.manager_id = str(user_id)
         user.manager_username = user_username
         user.manager_full_name = user_fullname
         await session.commit()
 
+    if user_lang=='ru':
+        text = 'Менеджер подключился к чату'
+    else:
+        text = 'A manager has joined the chat'
     await bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=msg_id, reply_markup=manager_took_usr_in_work_keyboard)
+    await bot.send_message(
+        chat_id=client_id,
+        text=text
+    )
 
 
 @router.message(F.forum_topic_closed)
@@ -45,10 +54,18 @@ async def handle_topic_closed(event: types.Message, bot: bot):
     chat_id = CHAT_ID
 
     async with AsyncSessionLocal() as session:
-        record = await session.execute(select(Users.telegram_id).where(Users.thread_id==int(thread_id)))
-        user_id = record.scalar_one_or_none()
+        record = await session.execute(select(Users).where(Users.thread_id==int(thread_id)))
+        user = record.scalar_one_or_none()
+        user_lang = user.user_lang
+        user_id = user.telegram_id
+        user.thread_id = None
+        await session.commit()
     if user_id:
-        await bot.send_message(chat_id=user_id, text='✅ Обращение закрыто')
+        if user_lang=='ru':
+            text = '✅ Обращение закрыто'
+        else:
+            text = '✅ The inquiry is closed.'
+        await bot.send_message(chat_id=user_id, text=text)
 
 @router.message(F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}))
 async def handle_group_message(message: types.Message, bot: bot):
@@ -69,7 +86,7 @@ async def handle_group_message(message: types.Message, bot: bot):
         )
 
     except Exception as e:
-        await message.answer('❌ Ошибка пересылки сообщения. Обратитесь к разработчику.')
+        await message.answer('❌ Ошибка пересылки сообщения. Возможно, тема уже закрыта. Если это не так - обратитесь к разработчику.')
         print(f"Ошибка пересылки сообщения пользователю: {e}")
 
 @router.message(F.chat.type == ChatType.PRIVATE)
@@ -77,11 +94,17 @@ async def handle_user_reply(message: types.Message, bot: bot):
     user_id = str(message.from_user.id)
     try:
         async with AsyncSessionLocal() as session:
-            record = await session.execute(select(Users.thread_id).where(Users.telegram_id==int(user_id)))
-            thread_id = record.scalar_one_or_none()
+            record = await session.execute(select(Users).where(Users.telegram_id==int(user_id)))
+            user = record.scalar_one_or_none()
+            thread_id = user.thread_id
+            user_lang = user.user_lang
 
-        if thread_id == 'None':
-            await message.answer('❌ У вас нет активных обращений. Используйте /start для создания нового.')
+        if thread_id is None:
+            if user_lang=='ru':
+                text = '❌ У вас нет активных обращений. Используйте /start для создания нового.'
+            else:
+                text = '❌ You have no active inquiries. Use /start to create a new one.'
+            await message.answer(text=text)
             return
 
         else:
