@@ -1,4 +1,5 @@
 from aiogram import types, Router, F
+from aiogram.enums import ChatType
 from aiogram.filters import Command
 import asyncio
 from aiogram.fsm.state import StatesGroup, State
@@ -20,6 +21,8 @@ class FSM_send_message(StatesGroup):
 
 @router.message(Command('send'))
 async def admin_send_message(message: types.Message, state: FSMContext):
+    if message.chat.type != ChatType.PRIVATE:
+        return
     user_id = message.from_user.id
     async with AsyncSessionLocal() as session:
         record = await session.execute(select(Users.user_role).where(Users.telegram_id==int(user_id)))
@@ -93,6 +96,8 @@ async def state_admin_send_message_confirm(callback: types.CallbackQuery, state:
 
 @router.message(Command("add_admin"))
 async def add_admin(message: types.Message):
+    if message.chat.type != ChatType.PRIVATE:
+        return
     user_id = message.from_user.id
     async with AsyncSessionLocal() as session:
         record = await session.execute(select(Users.user_role).where(Users.telegram_id==int(user_id)))
@@ -127,6 +132,8 @@ async def add_admin(message: types.Message):
 
 @router.message(Command("stat"))
 async def admin_stat(message: types.Message):
+    if message.chat.type != ChatType.PRIVATE:
+        return
     user_id = message.from_user.id
     async with AsyncSessionLocal() as session:
         record = await session.execute(select(Users.user_role).where(Users.telegram_id==int(user_id)))

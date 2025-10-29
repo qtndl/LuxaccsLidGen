@@ -140,7 +140,7 @@ async def call_manager(callback: types.CallbackQuery, state: FSMContext):
             ' ',
             ' ',
             'Нет',
-            f'https://t.me/c/{chat_id_for_link}/{user_topic}'
+            ' '
 
         ]
         await add_record_to_sheet(
@@ -245,7 +245,7 @@ async def last_question(message: types.Message, state: FSMContext):
         ' ',
         message_text,
         'Нет',
-        f'https://t.me/c/{chat_id_for_link}/{user_topic_id}'
+        ' '
 
     ]
     await add_record_to_sheet(

@@ -65,7 +65,7 @@ async def mngr_button(callback: types.CallbackQuery):
         f'@{client_username}',
         formatted_time,
         'Нет',
-        f'https://t.me/c/{chat_id_for_link}/{client_topic_id}'
+        ' '
     ]
     await add_record_to_sheet(
         spreadsheet_name='Luxaccs Лиды',
