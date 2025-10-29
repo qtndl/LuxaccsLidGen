@@ -1,4 +1,5 @@
 from aiogram import types, Router, F
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import Command
 from typing import Union
 from aiogram.fsm.state import StatesGroup, State
@@ -13,7 +14,7 @@ from datetime import datetime
 from database.database import AsyncSessionLocal
 from database.models import Users
 
-from keyboards.user.new_user_topic import manager_took_usr_in_work_keyboard
+from keyboards.user.new_user_topic import manager_close_client
 
 router = Router(name='in_topic_router')
 
@@ -41,7 +42,8 @@ async def mngr_button(callback: types.CallbackQuery):
         text = 'Менеджер подключился к чату'
     else:
         text = 'A manager has joined the chat'
-    await bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=msg_id, reply_markup=manager_took_usr_in_work_keyboard)
+    keyboard = await manager_close_client(client_id)
+    await bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=msg_id, reply_markup=keyboard)
     await bot.send_message(
         chat_id=client_id,
         text=text
@@ -69,6 +71,53 @@ async def mngr_button(callback: types.CallbackQuery):
         spreadsheet_name='Luxaccs Лиды',
         worksheet_name=f'{user_username}',
         values=values_for_sheet
+    )
+
+@router.callback_query(F.data.startswith('mcl_'))
+async def mngr_close_button(callback: types.CallbackQuery):
+    if callback.message.chat.type not in {ChatType.GROUP, ChatType.SUPERGROUP}:
+        return
+
+    thread_id = callback.message.message_thread_id
+    msg_id = callback.message.message_id
+
+    async with AsyncSessionLocal() as session:
+        record = await session.execute(select(Users).where(Users.thread_id==int(thread_id)))
+        user = record.scalar_one_or_none()
+        user_lang = user.user_lang
+        user_id = user.telegram_id
+        user_manager = user.manager_username
+        user.thread_id = None
+        await session.commit()
+    if user_id:
+        if user_lang=='ru':
+            text = '✅ Обращение закрыто'
+        else:
+            text = '✅ The inquiry is closed.'
+        await bot.send_message(chat_id=user_id, text=text)
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text='👌 Клиент закрыт', callback_data=f'ignore')
+    builder.adjust(1)
+    keyboard = builder.as_markup()
+
+    await bot.edit_message_reply_markup(chat_id=CHAT_ID, message_id=msg_id, reply_markup=keyboard)
+
+    await find_and_update_by_column_name(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name='Общий',
+        search_column_name='tg_id',
+        search_value=f'{user_id}',
+        update_column_name='Закрыт',
+        new_value=f'Да'
+    )
+    await find_and_update_by_column_name(
+        spreadsheet_name='Luxaccs Лиды',
+        worksheet_name=f'{user_manager}',
+        search_column_name='tg_id',
+        search_value=f'{user_id}',
+        update_column_name='Закрыт',
+        new_value=f'Да'
     )
 
 
@@ -120,6 +169,20 @@ async def handle_group_message(message: types.Message, bot: bot):
         return
     if message.message_thread_id is None:
         return
+
+    if (message.new_chat_members or
+        message.left_chat_member or
+        message.new_chat_title or
+        message.new_chat_photo or
+        message.delete_chat_photo or
+        message.group_chat_created or
+        message.supergroup_chat_created or
+        message.channel_chat_created or
+        message.migrate_to_chat_id or
+        message.migrate_from_chat_id or
+        message.pinned_message):
+        return
+
 
     try:
         async with AsyncSessionLocal() as session:

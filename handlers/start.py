@@ -56,14 +56,14 @@ async def start_menu(event: Union[types.Message, types.CallbackQuery], state: FS
 
 
     if user_lang == 'ru':
-        sent_message = await message.answer('Привет 👋\n'
-                                            'Я LuxBot — помогаю выдавать аккаунты для рекламы без блоков и ограничений.\n'
-                                            'Выберите язык 👇', reply_markup=start_menu_lang, parse_mode="HTML")
+        sent_message = await message.answer('🚀 С нами реклама льется без блоков и реджектов. LuxBot поможет арендовать акки под любые источники и гео — быстро и без рисков.\n\n'
+                                            'Мы берём на себя всю операционку, чтобы вы сосредоточились на трафике и профите 💸\n\n'
+                                            'Выберите язык ⬇️', reply_markup=start_menu_lang, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
     else:
-        sent_message = await message.answer('Hello 👋\n'
-                                            'I am LuxBot — I help provide accounts for advertising without blocks or restrictions.\n'
-                                            'Choose a language 👇', reply_markup=start_menu_lang, parse_mode="HTML")
+        sent_message = await message.answer('🚀 With us, advertising flows without blocks and rejects. LuxBot helps rent accounts for any traffic sources and GEOs — quickly and without risks.\n\n'
+                                            'We handle all the operational work so you can focus on traffic and profit 💸\n\n'
+                                            'Choose your language ⬇️', reply_markup=start_menu_lang, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
 
 

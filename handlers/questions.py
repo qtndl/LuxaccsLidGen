@@ -13,6 +13,7 @@ from database.database import AsyncSessionLocal
 from database.models import Users
 from keyboards.user.questions_factory import QuestionsButtons, get_question_keyboard
 from handlers.new_topic import create_user_topic
+from keyboards.user.user_call_manager import call_manager_menu_ru, call_manager_menu_en
 
 router = Router(name='questions_router')
 
@@ -77,6 +78,79 @@ async def en_start_menu(callback: types.CallbackQuery, state: FSMContext):
         sent_message = await callback.message.answer('1) Your main traffic sources?', reply_markup=keyboard, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
 
+@router.callback_query(QuestionsButtons.filter((F.button_text == 'Позвать LuxManager') | (F.button_text == 'Call LuxManager')))
+@router.callback_query(F.data=='call_manager')
+async def call_manager(callback: types.CallbackQuery, state: FSMContext):
+    user_id = callback.from_user.id
+    user_username = callback.from_user.username
+
+    await callback.message.delete()
+
+    data = await state.get_data()
+
+    try:
+        user_ref = int(data['user_ref'])
+    except:
+        user_ref = None
+        pass
+
+    async with AsyncSessionLocal() as first_session:
+        user_data = await first_session.execute(select(Users).where(Users.telegram_id==int(user_id)))
+        user = user_data.scalar_one_or_none()
+        user_lang = user.user_lang
+        if user_ref:
+            user.ref = user_ref
+            await first_session.commit()
+        user_topic = user.thread_id
+        print(user_topic)
+        print(user_topic is None)
+        if user_topic is None:
+            topic = await create_user_topic(
+                bot=bot,
+                chat_id=CHAT_ID,
+                user_id=user_id,
+                user_tg_name=user_username,
+                user_lang=user_lang,
+                topic_name=f'Лид | {user_username}'
+            )
+            user_topic = topic.message_thread_id
+        await bot.send_message(
+            chat_id=CHAT_ID,
+            message_thread_id=user_topic,
+            text=f'Пользователь не стал отвечать на вопросы, зовет менеджера'
+            )
+
+        if user_lang == 'ru':
+            answer_text = ('✅ Отлично, ваша заявка взята в работу! Свяжемся в ближайшее время. \n\n'
+                           'Так же у нас есть реф программа, о которой вы можете узнать лучше благодаря команде /ref')
+        else:
+            answer_text = ("✅ Great, your application has been accepted and is being processed! We will contact you shortly.\n\n"
+                           "We also have a referral program, which you can learn more about using the /ref command.")
+
+        await callback.message.answer(text=answer_text)
+
+
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%d.%m.%y %H:%M")
+        chat_id_for_link = str(CHAT_ID)[4:]
+        values_for_sheet = [
+            user_id,
+            f'@{user_username}',
+            formatted_time,
+            ' ',
+            ' ',
+            'Нет',
+            f'https://t.me/c/{chat_id_for_link}/{user_topic}'
+
+        ]
+        await add_record_to_sheet(
+            spreadsheet_name='Luxaccs Лиды',
+            worksheet_name='Общий',
+            values=values_for_sheet
+        )
+
+
+
 @router.callback_query(QuestionsButtons.filter((F.button_text == 'Другое (нап.)') | (F.button_text == 'Несколько (нап.)') | (F.button_text == 'Other (specify)') | (F.button_text == 'Multiple (specify)')))
 async def other_questions_manual(callback: types.CallbackQuery, callback_data: QuestionsButtons, state: FSMContext):
     user_id = callback.from_user.id
@@ -99,15 +173,17 @@ async def other_questions_manual(callback: types.CallbackQuery, callback_data: Q
 
     if user_lang == 'ru':
         message_text = questions_texts_ru[question_id]+f'\nНапишите ответ:'
+        kb = call_manager_menu_ru
     else:
         message_text = questions_texts_en[question_id]+f'\nWrite an answer:'
+        kb = call_manager_menu_en
 
 
 
     await callback.answer()
     await callback.message.delete()
 
-    sent_message = await callback.message.answer(message_text)
+    sent_message = await callback.message.answer(message_text, reply_markup=kb)
     await state.update_data(sent_message=sent_message.message_id)
     await state.set_state(st)
 
@@ -136,11 +212,11 @@ async def last_question(message: types.Message, state: FSMContext):
     await state.clear()
     message_text = ''
     if user_lang == 'ru':
-        answer_text = ('✅ Мы получили ваше обращение и ответим в ближайшее время здесь же - в боте. Благодарим за обращение!\n\n'
+        answer_text = ('✅ Отлично, ваша заявка взята в работу! Свяжемся в ближайшее время.\n\n'
                        'Так же у нас есть реф программа, о которой вы можете узнать лучше благодаря команде /ref')
         questions = questions_texts_ru
     else:
-        answer_text = ("✅ We have received your request and will respond as soon as possible right here in the chat. Thank you for contacting us!\n\n"
+        answer_text = ("✅ Great, your application has been accepted and is being processed! We will contact you shortly.\n\n"
                        "We also have a referral program, which you can learn more about using the /ref command.")
         questions = questions_texts_en
     for i in list(range(1, 5)):
@@ -207,11 +283,13 @@ async def other_questions_state_manual(message: types.Message, state: FSMContext
     await state.update_data(**{str(question_id): user_answer})
     if user_lang == 'ru':
         message_text = questions_texts_ru[next_question_id]
+        kb = call_manager_menu_ru
     else:
         message_text = questions_texts_en[next_question_id]
+        kb = call_manager_menu_en
 
     if next_question_id==4:
-        sent_message = await message.answer(message_text)
+        sent_message = await message.answer(message_text, reply_markup=kb)
         await state.update_data(sent_message=sent_message.message_id)
         await state.set_state(Questions.question_4)
         return
