@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.deep_linking import create_start_link, decode_payload
 from config.bot_config import bot
 from sqlalchemy import select, and_, func, or_, text
+from keyboards.user.questions_factory import QuestionsButtons
 
 from database.database import AsyncSessionLocal
 from database.models import Users
@@ -18,7 +19,6 @@ router = Router(name='start_router')
 
 @router.message(CommandStart(deep_link=True))
 @router.message(Command('start'))
-@router.callback_query(F.data=='main_menu')
 async def start_menu(event: Union[types.Message, types.CallbackQuery], state: FSMContext, command: CommandObject):
     callback = None
     if isinstance(event, types.Message):
@@ -66,6 +66,50 @@ async def start_menu(event: Union[types.Message, types.CallbackQuery], state: FS
                                             'Choose your language ⬇️', reply_markup=start_menu_lang, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
 
+@router.callback_query(QuestionsButtons.filter((F.button_text == 'Назад в меню') | (F.button_text == 'Back to menu')))
+@router.callback_query(F.data=='main_menu')
+async def start_menu(event: Union[types.Message, types.CallbackQuery], state: FSMContext):
+    callback = None
+    if isinstance(event, types.Message):
+        message = event
+        user_id = message.from_user.id
+        user_fullname = str(message.from_user.full_name)
+        user_username = str(message.from_user.username)
+        user_lang = str(message.from_user.language_code)
+        chat_id = message.chat.id
+    else:
+        callback = event
+        message = callback.message
+        user_id = callback.from_user.id
+        user_fullname = str(callback.from_user.full_name)
+        user_username = str(callback.from_user.username)
+        user_lang = str(callback.from_user.language_code)
+        chat_id = callback.message.chat.id
+        await callback.answer()
+        await callback.message.delete()
+
+    data = await state.get_data()
+    if data:
+        try:
+            user_ref = data['user_ref']
+            if user_ref:
+                await state.clear()
+                await state.update_data(user_ref=user_ref)
+        except:
+            await state.clear()
+            pass
+
+
+    if user_lang == 'ru':
+        sent_message = await message.answer('🚀 С нами реклама льется без блоков и реджектов. LuxBot поможет арендовать акки под любые источники и гео — быстро и без рисков.\n\n'
+                                            'Мы берём на себя всю операционку, чтобы вы сосредоточились на трафике и профите 💸\n\n'
+                                            'Выберите язык ⬇️', reply_markup=start_menu_lang, parse_mode="HTML")
+        await state.update_data(sent_message_id=sent_message.message_id)
+    else:
+        sent_message = await message.answer('🚀 With us, advertising flows without blocks and rejects. LuxBot helps rent accounts for any traffic sources and GEOs — quickly and without risks.\n\n'
+                                            'We handle all the operational work so you can focus on traffic and profit 💸\n\n'
+                                            'Choose your language ⬇️', reply_markup=start_menu_lang, parse_mode="HTML")
+        await state.update_data(sent_message_id=sent_message.message_id)
 
 @router.message(Command("ref"))
 async def referal(message: types.Message):

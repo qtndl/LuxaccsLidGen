@@ -12,6 +12,7 @@ from datetime import datetime
 from database.database import AsyncSessionLocal
 from database.models import Users
 from keyboards.user.questions_factory import QuestionsButtons, get_question_keyboard
+from keyboards.user.back_to_main_menu import back_to_main_menu_ru, back_to_main_menu_en
 from handlers.new_topic import create_user_topic
 from keyboards.user.user_call_manager import call_manager_menu_ru, call_manager_menu_en
 
@@ -47,6 +48,9 @@ async def ru_start_menu(callback: types.CallbackQuery, state: FSMContext):
             )
             session.add(new_user)
             await session.commit()
+        else:
+            user_data.user_lang = 'ru'
+            await session.commit()
         keyboard = await get_question_keyboard(1, 'ru')
         sent_message = await callback.message.answer('1) Ваши основные источники трафика?', reply_markup=keyboard, parse_mode="HTML")
         await state.update_data(sent_message_id=sent_message.message_id)
@@ -73,6 +77,9 @@ async def en_start_menu(callback: types.CallbackQuery, state: FSMContext):
 
             )
             session.add(new_user)
+            await session.commit()
+        else:
+            user_data.user_lang = 'en'
             await session.commit()
         keyboard = await get_question_keyboard(1, 'en')
         sent_message = await callback.message.answer('1) Your main traffic sources?', reply_markup=keyboard, parse_mode="HTML")
@@ -102,8 +109,6 @@ async def call_manager(callback: types.CallbackQuery, state: FSMContext):
             user.ref = user_ref
             await first_session.commit()
         user_topic = user.thread_id
-        print(user_topic)
-        print(user_topic is None)
         if user_topic is None:
             topic = await create_user_topic(
                 bot=bot,
@@ -123,11 +128,13 @@ async def call_manager(callback: types.CallbackQuery, state: FSMContext):
         if user_lang == 'ru':
             answer_text = ('✅ Отлично, ваша заявка взята в работу! Свяжемся в ближайшее время. \n\n'
                            'Так же у нас есть реф программа, о которой вы можете узнать лучше благодаря команде /ref')
+            kb = back_to_main_menu_ru
         else:
             answer_text = ("✅ Great, your application has been accepted and is being processed! We will contact you shortly.\n\n"
                            "We also have a referral program, which you can learn more about using the /ref command.")
+            kb = back_to_main_menu_en
 
-        await callback.message.answer(text=answer_text)
+        await callback.message.answer(text=answer_text, reply_markup=kb)
 
 
         current_time = datetime.now()
@@ -215,10 +222,12 @@ async def last_question(message: types.Message, state: FSMContext):
         answer_text = ('✅ Отлично, ваша заявка взята в работу! Свяжемся в ближайшее время.\n\n'
                        'Так же у нас есть реф программа, о которой вы можете узнать лучше благодаря команде /ref')
         questions = questions_texts_ru
+        kb = back_to_main_menu_ru
     else:
         answer_text = ("✅ Great, your application has been accepted and is being processed! We will contact you shortly.\n\n"
                        "We also have a referral program, which you can learn more about using the /ref command.")
         questions = questions_texts_en
+        kb = back_to_main_menu_en
     for i in list(range(1, 5)):
         message_text += questions[i]+'\n'
         message_text += (data[str(i)])+'\n'
@@ -233,7 +242,7 @@ async def last_question(message: types.Message, state: FSMContext):
                  f'{message_text}'
     )
 
-    await message.answer(text=answer_text)
+    await message.answer(text=answer_text, reply_markup=kb)
 
     current_time = datetime.now()
     formatted_time = current_time.strftime("%d.%m.%y %H:%M")
@@ -304,31 +313,36 @@ async def other_questions(callback: types.CallbackQuery, callback_data: Question
     user_id = callback.from_user.id
     user_username = callback.from_user.username
     async with AsyncSessionLocal() as session:
-        user_data = await session.execute(select(Users.user_lang).where(Users.telegram_id==int(user_id)))
-        user_lang = user_data.scalar_one_or_none()
+        user_data = await session.execute(select(Users).where(Users.telegram_id==int(user_id)))
+        user = user_data.scalar_one_or_none()
+        user_lang = user.user_lang
+        user_topic = user.thread_id
 
     question_id = callback_data.question_id
     next_question_id = question_id+1
     user_answer = callback_data.button_text
 
     if question_id==1:
-        await create_user_topic(
-            bot=bot,
-            chat_id=CHAT_ID,
-            user_id=user_id,
-            user_tg_name=user_username,
-            user_lang=user_lang,
-            topic_name=f'Лид | {user_username}'
-        )
+        if user_topic is None:
+            await create_user_topic(
+                bot=bot,
+                chat_id=CHAT_ID,
+                user_id=user_id,
+                user_tg_name=user_username,
+                user_lang=user_lang,
+                topic_name=f'Лид | {user_username}'
+            )
 
     await state.update_data(**{str(question_id): user_answer})
     if user_lang == 'ru':
         message_text = questions_texts_ru[next_question_id]
+        kb = back_to_main_menu_ru
     else:
         message_text = questions_texts_en[next_question_id]
+        kb = back_to_main_menu_en
 
     if next_question_id==4:
-        sent_message = await callback.message.answer(message_text)
+        sent_message = await callback.message.answer(message_text, reply_markup=kb)
         await state.update_data(sent_message=sent_message.message_id)
         await state.set_state(Questions.question_4)
         await callback.answer()

@@ -11,8 +11,9 @@ from database.database import AsyncSessionLocal
 from database.models import Users
 from keyboards.admin.admin_panel_send_message_confirm_menu import admin_panel_send_message_confirm_menu
 from keyboards.user.start_menu_lang import start_menu_lang
+from keyboards.user.back_to_main_menu import back_to_main_menu_ru
 
-router = Router(name='start_router')
+router = Router(name='admin_commands_router')
 
 class FSM_send_message(StatesGroup):
     sent_message_id = State()
@@ -31,10 +32,10 @@ async def admin_send_message(message: types.Message, state: FSMContext):
     if user_role != 'admin':
         await message.answer(f'❌ Нет прав администратора!\n'
                              f'Попросите администратора дать вам права админа.\n'
-                             f'Отправьте ему свой юзернейм', parse_mode='HTML')
+                             f'Отправьте ему свой юзернейм', reply_markup=back_to_main_menu_ru, parse_mode='HTML')
         return
 
-    sent_message = await message.answer(f'Пришлите сообщение для отправки', parse_mode="HTML")
+    sent_message = await message.answer(f'Пришлите сообщение для отправки', reply_markup=back_to_main_menu_ru, parse_mode="HTML")
     await state.update_data(sent_message_id=sent_message.message_id)
     await state.set_state(FSM_send_message.message_to_send)
 
@@ -91,7 +92,7 @@ async def state_admin_send_message_confirm(callback: types.CallbackQuery, state:
     await bot.delete_message(chat_id=callback.message.chat.id, message_id=s_message.message_id)
     await callback.message.answer(f"📊 Результат рассылки:\n"
                                                  f"✅ Успешно: {success}\n"
-                                                 f"❌ Заблокировали: {blocked}", parse_mode="HTML")
+                                                 f"❌ Заблокировали: {blocked}", reply_markup=back_to_main_menu_ru, parse_mode="HTML")
     await callback.answer()
 
 @router.message(Command("add_admin"))
@@ -106,14 +107,14 @@ async def add_admin(message: types.Message):
     if user_role != 'admin':
         await message.answer(f'❌ Нет прав администратора!\n'
                              f'Попросите администратора дать вам права админа.\n'
-                             f'Отправьте ему свой юзернейм', parse_mode='HTML')
+                             f'Отправьте ему свой юзернейм', reply_markup=back_to_main_menu_ru, parse_mode='HTML')
         return
 
     username_to_add = message.text.split()[-1]
 
     if username_to_add==message.text:
         await message.answer('❌ Нужно отправить команду в формате:\n'
-                             '/add_admin @username')
+                             '/add_admin @username', reply_markup=back_to_main_menu_ru)
         return
 
     username_clear = username_to_add.replace('@', '')
@@ -123,12 +124,12 @@ async def add_admin(message: types.Message):
 
         if user is None:
             await message.answer('❌ Пользователя нет в базе данных, не получилось выдать права админа!\n'
-                                 'Пользователю нужно зайти в бота и выбрать язык, тогда он попадет в базу данных')
+                                 'Пользователю нужно зайти в бота и выбрать язык, тогда он попадет в базу данных', reply_markup=back_to_main_menu_ru)
             return
         user.user_role = 'admin'
         await admin_session.commit()
 
-        await message.answer(f'✅ Пользователь ({user.full_name}|@{user.telegram_username}) получил права админа.')
+        await message.answer(f'✅ Пользователь ({user.full_name}|@{user.telegram_username}) получил права админа.', reply_markup=back_to_main_menu_ru)
 
 @router.message(Command("stat"))
 async def admin_stat(message: types.Message):
@@ -142,13 +143,13 @@ async def admin_stat(message: types.Message):
     if user_role != 'admin':
         await message.answer(f'❌ Нет прав администратора!\n'
                              f'Попросите администратора дать вам права админа.\n'
-                             f'Отправьте ему свой юзернейм', parse_mode='HTML')
+                             f'Отправьте ему свой юзернейм', reply_markup=back_to_main_menu_ru, parse_mode='HTML')
         return
 
     user_to_stat = message.text.split()[-1]
     if user_to_stat==message.text:
         await message.answer('❌ Нужно отправить команду в формате:\n'
-                             '/stat @username')
+                             '/stat @username', reply_markup=back_to_main_menu_ru)
         return
 
     username_clear = user_to_stat.replace('@', '')
@@ -159,7 +160,7 @@ async def admin_stat(message: types.Message):
 
         if user is None:
             await message.answer('❌ Пользователя нет в базе данных!\n'
-                                 'Пользователю нужно зайти в бота и выбрать язык, тогда он попадет в базу данных')
+                                 'Пользователю нужно зайти в бота и выбрать язык, тогда он попадет в базу данных', reply_markup=back_to_main_menu_ru)
             return
         id_to_stat = user.telegram_id
 
@@ -184,7 +185,7 @@ async def admin_stat(message: types.Message):
                          f'Выбранный язык: {client_lang}\n'
                          f'Менеджер: @{client_manager}\n'
                          f'Реферал: {user_ref}\n'
-                         f'Привлечено лидов: {ref_count}')
+                         f'Привлечено лидов: {ref_count}', reply_markup=back_to_main_menu_ru)
 
 
 
