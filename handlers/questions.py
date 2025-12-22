@@ -147,8 +147,8 @@ async def call_manager(callback: types.CallbackQuery, state: FSMContext):
             ' ',
             ' ',
             'Нет',
-            ' '
-
+            ' ',
+            user_ref if user_ref else ' '
         ]
         await add_record_to_sheet(
             spreadsheet_name='Luxaccs Лиды',
@@ -254,8 +254,8 @@ async def last_question(message: types.Message, state: FSMContext):
         ' ',
         message_text,
         'Нет',
-        ' '
-
+        ' ',
+        user_ref if user_ref else ' '
     ]
     await add_record_to_sheet(
         spreadsheet_name='Luxaccs Лиды',
