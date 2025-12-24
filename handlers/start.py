@@ -169,11 +169,11 @@ async def referal_info(callback: types.CallbackQuery):
         user_lang = record_lang.scalar_one_or_none()
 
     if user_lang == 'ru':
-        text_message = (f'- Требования к рефералу (KPI): Заказ аккаунтов и оплата их. Проявление активности и работа с нами минимум неделя\n\n'
+        text_message = (f'- Требования к рефералу (KPI): Заказ аккаунтов и оплата. Проявление активности и работа с нами минимум неделя\n\n'
                         f'- Награды для реферера: Покрытие account fee (наши клиенты), либо выплата 50% на кошелек (сторонние люди, цифры в соответствующих разделах меню)')
         keyboard = ref_back_ru
     else:
-        text_message = (f'- Referral requirements (KPI): Ordering accounts and paying for them. Showing activity and working with us for at least a week.\n\n'
+        text_message = (f'- Referral requirements (KPI): Ordering accounts and paying. Showing activity and working with us for at least a week.\n\n'
                         f'- Rewards for the referrer: Coverage of account fee (our customers), or a 50% payout to a wallet (for third parties, figures in the corresponding menu sections).')
         keyboard = ref_back_en
     await callback.message.answer(text_message, reply_markup=keyboard, parse_mode='HTML')
@@ -230,7 +230,7 @@ async def referal_other(callback: types.CallbackQuery):
                         f'Вся статистика рефералов и статусы доступны рефереру по таблице. Всё честно: выплаты только по проверенным результатам.')
         keyboard = ref_back_ru
     else:
-        text_message = (f"Для остальных источников действует фиксированная реферальная выплата, зависящая от того, является ли реферер нашим действующим клиентом.\n\n"
+        text_message = (f"For other sources, a fixed referral payment applies, depending on whether the referrer is an existing client of ours.\n\n"
                         f"The first figure is if the person works with us (to cover the account fee).\n"
                         f"The second figure is if they do not work with us but refer a client to us (the payment is received to their wallet).\n\n"
                         f"● MGID: 50 USD / 25 USD\n" 
