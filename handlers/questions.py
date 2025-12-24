@@ -373,7 +373,7 @@ questions_texts_en = {
     1: '1) Your main traffic sources?',
     2: '2) What is your main vertical?',
     3: '3) What is your monthly spend?',
-    4: '4) How should we call you?'
+    4: '4) Enter your name'
     # 5: '5) What kind of ads do you run??',
     # 6: '6) Have you worked with agencies providing advertising accounts?',
     # 7: '7) Which GEOs do you target most often?',
